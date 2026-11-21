@@ -7,6 +7,7 @@
 서버·빌드·외부 트래커 없이 정적 파일만으로 동작하고, 작업 내용은 이 브라우저 `localStorage`에만 저장됩니다.
 
 - 미리보기: `preview-v2.png` (디자인 스튜디오 v2) · `preview-v2-mobile.png` · `preview-upgraded.png` · `preview-desktop.png` · `preview-script.png` · `preview-bridge.png` · `preview-mobile.png`
+- **Pro AI 연결(선택)**: 헤더의 `무료 모드 · API 연결` 배지에서 OpenAI·Gemini·Claude·자체 서버를 연결하면, 카드 분할·숏폼 대본 탭의 **✨ Pro AI로 8장 카드+30초 대본 생성**이 슬라이드 8장과 4비트 대본·자막을 한 번에 채웁니다. 연결하지 않으면 붙여넣은 글의 자동 분할과 무료 대본 엔진이 그대로 동작합니다. 키는 기본 `sessionStorage`. 엔진: `engines/pro-api-connector.js` · `engines/pro-studio.js`
 - 같은 패밀리: `../shortform-radar/` (떡상 레이더) — IBM Plex Sans KR, 라이트/다크 토글, 빌드 없는 HTML/CSS/JS
 
 ---

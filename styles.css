@@ -740,3 +740,27 @@ body.modal-open { overflow: hidden; }
   .v2-bp-actions .btn, .v2-bp-actions .mini-btn { flex: 1 1 44%; }
   .v2-actions .btn { flex: 1 1 45%; }
 }
+
+/* ── Pro AI 연결 (공용 엔진 · pro-api-connector.js) ───────── */
+.pro-badge-slot { display: inline-flex; align-items: center; min-width: 0; }
+.pro-badge-slot .proconn-badge { white-space: nowrap; }
+.pro-box { display: grid; gap: 8px; margin: 10px 0 2px; }
+.btn.pro-btn {
+  width: 100%; height: 42px; white-space: normal; line-height: 1.25;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, var(--surface)), color-mix(in srgb, var(--brand-2) 16%, var(--surface)));
+  color: var(--ink); font-weight: 700;
+}
+.btn.pro-btn[data-pro-mode="pro"] {
+  background: linear-gradient(135deg, var(--brand), var(--accent));
+  border-color: transparent; color: #fff;
+}
+.btn.pro-btn[aria-busy="true"] { opacity: .75; cursor: progress; }
+.pro-spark { font-size: 14px; }
+.pro-state { margin: 0; font-size: 11.5px; line-height: 1.55; color: var(--ink-3); }
+.pro-state[data-pro-mode="pro"] { color: var(--brand); }
+@media (max-width: 700px) {
+  .pro-badge-slot { order: 1; }
+  .pro-badge-slot .proconn-badge { font-size: 11.5px; padding: 6px 10px; gap: 6px; }
+  .pro-badge-slot .proconn-badge .pc-sub { display: none; }
+}

@@ -7,6 +7,8 @@
   'use strict';
 
   const C = window.StudioCore;
+  const P = window.ProConnector || null; // engines/pro-api-connector.js
+  const PS = window.ProStudio ? window.ProStudio.create(P) : null; // engines/pro-studio.js
   const FONT = 'PlexKR, "IBM Plex Sans KR", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
   const STORE = C.STORAGE;
 
@@ -27,6 +29,7 @@
     fw: { id: 'PAS', out: null },
     bridge: { kind: 'cards', parsed: null },
     gemini: { key: '', model: '' },
+    pro: { busy: false, meta: '', at: '' },
     v2: { fontMix: 'pretendard-only', grain: 'none', source: { kind: 'preset' }, cards: null },
   };
   const imageCache = new Map();
@@ -1208,6 +1211,200 @@
   }
 
   /* ── auto split ─────────────────────────────────────────── */
+  /* ── Pro AI (8장 카드 + 30초 대본) ────────────────────────
+     무료 모드에서는 버튼이 연결 안내만 열고 요청을 보내지 않는다.
+     연결 뒤에는 buildProPrompt('cardnews') → slides, ('shortform') → beats. */
+
+  function proFirstLine(text) {
+    const t = String(text || '').trim();
+    if (!t) return '';
+    const first = t.split(/\n|\. |。|! |\? /).map(x => x.trim()).filter(Boolean)[0] || t;
+    return first.slice(0, 60);
+  }
+
+  function proInput() {
+    const points = ['#point1', '#point2', '#point3']
+      .map(sel => { const el = $(sel); return el ? String(el.value || '').trim() : ''; })
+      .filter(Boolean);
+    const splitText = els.splitInput ? String(els.splitInput.value || '').trim() : '';
+    return {
+      topic: String(els.topicInput ? els.topicInput.value : '').trim() || proFirstLine(splitText),
+      target: String(els.targetInput ? els.targetInput.value : '').trim(),
+      point: points.join(' / ') || proFirstLine(splitText.slice(60)) || '',
+      cta: '저장하거나 팔로우하기',
+    };
+  }
+
+  function setProBusy(on) {
+    state.pro.busy = !!on;
+    $$('[data-action="pro-generate"]').forEach(btn => {
+      btn.setAttribute('aria-busy', on ? 'true' : 'false');
+      const label = btn.querySelector('.pro-label');
+      if (label) label.textContent = on ? 'Pro AI가 만드는 중…' : 'Pro AI로 8장 카드+30초 대본 생성';
+    });
+  }
+
+  function updateProUi() {
+    if (!PS) return;
+    const s = PS.sync(document);
+    const on = s.connected;
+    $$('[data-pro-state]').forEach(el => {
+      el.setAttribute('data-pro-mode', on ? 'pro' : 'free');
+      const free = el.getAttribute('data-pro-free') || '';
+      const pro = el.getAttribute('data-pro-pro') || '';
+      if (state.pro.busy) return;
+      el.textContent = on ? pro : free;
+    });
+    return s;
+  }
+
+  /* 서버 응답 → 슬라이드 8장 */
+  function slidesFromPro(data) {
+    const cover = data && data.cover ? data.cover : {};
+    const cards = Array.isArray(data && data.cards) ? data.cards : [];
+    const last = data && data.last ? data.last : {};
+    const stamp = Date.now().toString(36);
+    const out = [];
+    out.push({
+      kind: 'cover', badge: (state.project.badge || 'CARD NEWS'),
+      title: String(cover.headline || '').trim(), body: String(cover.sub || '').trim(),
+    });
+    cards.slice(0, 6).forEach(c => {
+      out.push({
+        kind: 'body', badge: '',
+        title: String(c && c.headline || '').trim(), body: String(c && c.body || '').trim(),
+      });
+    });
+    if (String(last.headline || '').trim()) {
+      out.push({ kind: 'cta', badge: '', title: String(last.headline).trim(), body: String(last.body || '').trim() });
+    }
+    return out.filter(s => s.title || s.body).map((s, i) => Object.assign({ id: 'pro' + stamp + i }, s));
+  }
+
+  /* 서버 응답 → 4비트 대본 (0~3 · 3~12 · 12~25 · 25~30초) */
+  function beatsFromPro(data) {
+    const sf = data || {};
+    const lines = (Array.isArray(sf.beats) ? sf.beats : []).map(b => ({
+      line: String(b && b.line || '').trim(),
+      scene: String(b && b.scene || '').trim(),
+    })).filter(b => b.line);
+    const hookLine = String((sf.hook && sf.hook.line) || (lines[0] && lines[0].line) || '').trim();
+    const ctaLine = String(sf.cta || '').trim() || String((lines[lines.length - 1] || {}).line || '').trim();
+    const mid = lines.filter(b => b.line !== hookLine && b.line !== ctaLine);
+    const half = Math.ceil(mid.length / 2);
+    const pick = arr => arr.map(b => b.line).join(' ');
+    const scenes = arr => arr.map(b => b.scene).filter(Boolean).slice(0, 2);
+    const beats = [];
+    if (hookLine) beats.push({ narration: hookLine, screen: [String((sf.hook && sf.hook.onScreen) || (lines[0] && lines[0].scene) || '').trim()].filter(Boolean) });
+    if (mid.length) beats.push({ narration: pick(mid.slice(0, half)), screen: scenes(mid.slice(0, half)) });
+    if (mid.length > half) beats.push({ narration: pick(mid.slice(half)), screen: scenes(mid.slice(half)) });
+    if (ctaLine && ctaLine !== hookLine) beats.push({ narration: ctaLine, screen: scenes(lines.slice(-1)) });
+    return beats.filter(b => b.narration).slice(0, 4);
+  }
+
+  function runPro() {
+    if (!PS || !P) { toast('Pro 연결 엔진을 불러오지 못했습니다. 새로고침해 주세요.', 'warn'); return; }
+    if (state.pro.busy) return;
+    const input = proInput();
+    if (!input.topic) {
+      toast('주제를 먼저 입력해 주세요.', 'warn');
+      (els.topicInput || els.splitInput).focus();
+      return;
+    }
+    if (!PS.connected()) {
+      updateProUi();
+      toast('무료 모드입니다. Pro API를 연결하면 8장 카드와 대본이 바로 채워집니다.');
+      PS.openConnect();
+      return;
+    }
+
+    setProBusy(true);
+    $$('[data-pro-state]').forEach(el => { el.textContent = 'Pro AI가 8장 카드와 대본을 만드는 중… (보통 20~60초) 창을 닫지 마세요.'; });
+
+    const cardReq = PS.run('cardnews', input, {
+      replace: [['cards 는 2~5장(총 6장).', 'cards 는 6장 no 2~7(총 8장: 표지 1 + 본문 6 + 마무리 1).']],
+      appendPrompt: '카드마다 headline 은 20자 이내, body 는 45자 이내. 표지 1장 + 본문 6장 + 마무리 1장, 모두 8장으로 채운다.',
+      maxTokens: 2600,
+    });
+
+    cardReq.then(cardRes => {
+      if (!cardRes.ok) {
+        setProBusy(false);
+        updateProUi();
+        $$('[data-pro-state]').forEach(el => { el.textContent = cardRes.message; });
+        toast(cardRes.message, 'warn');
+        return null;
+      }
+      const slides = slidesFromPro(cardRes.data);
+      if (!slides.length) {
+        setProBusy(false);
+        updateProUi();
+        toast('응답에 카드가 비어 있습니다. 다시 시도해 주세요.', 'warn');
+        return null;
+      }
+      state.project.slides = slides;
+      state.selected = 0;
+      state.pro.meta = PS.describe(cardRes);
+      state.pro.at = new Date().toISOString();
+      touch(true);
+
+      return PS.run('shortform', {
+        topic: input.topic, target: input.target, point: input.point,
+        length: '30초', cta: input.cta,
+      }, {
+        replace: [['beats 는 5~8개', 'beats 는 4개']],
+        appendPrompt: 'beats 는 0-3, 3-12, 12-25, 25-30 네 구간에 정확히 4개만 만든다. 한 비트에 한두 문장, 읽어서 30초를 넘기지 않는다.',
+        maxTokens: 1600,
+      }).then(scriptRes => ({ cardRes, scriptRes, slides }));
+    }).then(out => {
+      if (!out) return;
+      const { scriptRes, slides } = out;
+      let scriptOk = false;
+      if (scriptRes && scriptRes.ok) {
+        const beats = beatsFromPro(scriptRes.data);
+        if (beats.length >= 3) {
+          state.script.topic = input.topic;
+          state.script.target = input.target || state.script.target;
+          state.script.points = [input.point, '', ''].map(x => String(x || '').slice(0, 80));
+          state.script.beats = beats;
+          state.script.framework = null;
+          applyScriptInputs();
+          scriptOk = true;
+        }
+      }
+      setProBusy(false);
+      renderAll(true);
+      updateProUi();
+      autosave();
+      const msg = scriptOk
+        ? `Pro 카드 ${slides.length}장과 30초 대본 ${state.script.beats.length}비트를 채웠습니다.`
+        : `Pro 카드 ${slides.length}장을 채웠습니다. 대본은 응답이 비어 다시 시도해 주세요.`;
+      $$('[data-pro-state]').forEach(el => {
+        el.textContent = (state.pro.meta ? state.pro.meta + ' · ' : '') + msg;
+      });
+      toast(msg, scriptOk ? 'ok' : 'warn');
+    });
+  }
+
+  function hookProConnect() {
+    const btn = $('#proConnect');
+    if (!btn || btn.getAttribute('data-pro-hooked') === '1') return;
+    btn.setAttribute('data-pro-hooked', '1');
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      if (P && typeof P.mountModal === 'function') P.mountModal(btn);
+      PS.openConnect();
+    });
+  }
+
+  function initPro() {
+    if (!PS) return;
+    PS.badge('#proBadge');
+    hookProConnect();
+    PS.onConnectChange(() => updateProUi());
+    updateProUi();
+  }
+
   function autoSplit() {
     const text = els.splitInput.value;
     const res = C.splitTextIntoSlides(text, {
@@ -1983,6 +2180,8 @@
         wrapEmphasis();
       } else if (action === 'auto-split') {
         autoSplit();
+      } else if (action === 'pro-generate') {
+        runPro();
       } else if (action === 'recommend-design') {
         const rec = recommendDesign();
         if (rec.ok) toast(`스타일 ${rec.refs.length}안을 골랐습니다. 마음에 드는 안을 누르세요.`, 'ok');
@@ -2433,6 +2632,7 @@
     loadGemini();
     applyScriptInputs();
     renderAll(true);
+    initPro();
     switchTab('cards');
 
     // 웹폰트가 준비되면 캔버스를 다시 그린다(첫 렌더가 대체 폰트일 수 있음)
