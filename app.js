@@ -2042,7 +2042,7 @@
   function applyTheme(theme) {
     const next = theme === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', next);
-    document.querySelector('meta[name="theme-color"]').setAttribute('content', next === 'dark' ? '#080a0f' : '#ffffff');
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', next === 'dark' ? '#0A0B0E' : '#FFFFFF');
     const btn = $('[data-action="toggle-theme"]');
     if (btn) btn.setAttribute('aria-label', next === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환');
     try { localStorage.setItem(STORE.theme, next); } catch (e) { /* ignore */ }

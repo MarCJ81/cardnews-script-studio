@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>카드뉴스·대본 스튜디오 — 카드뉴스 PNG &amp; 30초 숏폼 대본·자막 생성기</title>
 <meta name="description" content="긴 글을 카드뉴스로 나누고, 6가지 테마로 1080px PNG를 바로 뽑습니다. 30초 숏폼 대본과 .srt 자막까지. 서버 없이 브라우저에서만 동작하고 작업은 이 브라우저에 저장됩니다." />
-<meta name="theme-color" content="#ffffff" />
+<meta name="theme-color" content="#FFFFFF" />
 <meta name="color-scheme" content="light dark" />
 <link rel="icon" href="favicon.svg" type="image/svg+xml" />
 <link rel="stylesheet" href="styles.css" />
@@ -18,15 +18,10 @@
     <a class="brand" href="#" data-action="go-cards" aria-label="카드뉴스·대본 스튜디오 홈">
       <span class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 40 40" width="34" height="34">
-          <defs>
-            <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#ff7a3d" /><stop offset="1" stop-color="#e81f5a" />
-            </linearGradient>
-          </defs>
-          <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#brandGrad)" />
-          <rect x="8" y="12" width="15" height="18" rx="2.6" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.8" />
-          <rect x="15" y="9" width="17" height="21" rx="2.8" fill="#fff" fill-opacity=".18" stroke="#fff" stroke-width="1.9" />
-          <path d="M21.4 15.6l6.4 3.8-6.4 3.8z" fill="#fff" />
+          <rect x="0.5" y="0.5" width="39" height="39" rx="11" fill="#2F5BFF" />
+          <rect x="8" y="12.4" width="14.6" height="17.6" rx="2.6" fill="none" stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1.8" />
+          <rect x="14.6" y="9.4" width="17" height="21.2" rx="2.8" fill="#FFFFFF" fill-opacity=".16" stroke="#FFFFFF" stroke-width="1.9" />
+          <path d="M21.3 15.7l6.3 3.8-6.3 3.8z" fill="#FFFFFF" />
         </svg>
       </span>
       <span class="brand-text">
@@ -62,19 +57,34 @@
 
   <!-- ── 카드뉴스 제작 ───────────────────────────────────── -->
   <section class="view" id="view-cards" role="tabpanel" aria-label="카드뉴스 제작">
+    <div class="view-head tight">
+      <div class="vh-main">
+        <p class="eyebrow"><span class="live-dot"></span>Local only · 0 requests</p>
+        <h1>카드뉴스 <em>제작</em></h1>
+        <p class="lead">붙여넣은 글을 표지·본문·마무리로 나누고 1080px PNG로 뽑습니다. 테마·사진·팔레트·브랜드 키트까지 이 화면에서.</p>
+      </div>
+      <div class="vh-meta" aria-hidden="true">
+        <span class="meta-tile"><b>3</b><em>비율</em></span>
+        <span class="meta-tile"><b>6</b><em>테마</em></span>
+        <span class="meta-tile"><b>8</b><em>최대 장수</em></span>
+      </div>
+    </div>
+
     <div class="studio">
 
-      <aside class="panel col-slides" aria-label="슬라이드 목록">
-        <div class="panel-head">
-          <h2>슬라이드</h2>
-          <span class="chip" id="slideCount">4장</span>
-        </div>
-        <div class="slide-list" id="slideList" role="list"></div>
-        <div class="slide-add">
-          <button type="button" class="btn btn-ghost" data-action="add-body">+ 본문</button>
-          <button type="button" class="btn btn-ghost" data-action="add-cta">+ 마무리</button>
-        </div>
-        <p class="hint">표지 1장 + 본문 최대 6장 + 마무리 1장. 카드를 누르면 편집합니다.</p>
+      <aside class="col-slides" aria-label="슬라이드 목록">
+        <section class="tile">
+          <div class="panel-head">
+            <h2>슬라이드</h2>
+            <span class="chip" id="slideCount">4장</span>
+          </div>
+          <div class="slide-list" id="slideList" role="list"></div>
+          <div class="slide-add">
+            <button type="button" class="btn btn-ghost" data-action="add-body">+ 본문</button>
+            <button type="button" class="btn btn-ghost" data-action="add-cta">+ 마무리</button>
+          </div>
+          <p class="hint">표지 1장 + 본문 최대 6장 + 마무리 1장. 카드를 누르면 편집합니다.</p>
+        </section>
       </aside>
 
       <section class="stage" aria-label="미리보기">
@@ -93,16 +103,19 @@
         <p class="stage-note" id="stageNote">1080 × 1350 PNG · 강조는 <b>**이렇게**</b> 감쌉니다.</p>
       </section>
 
-      <aside class="panel col-inspector" aria-label="설정">
-        <div class="panel-head">
-          <h2>테마</h2>
-          <span class="muted" id="themeName">화이트 카드</span>
-        </div>
-        <div class="theme-grid" id="themeGrid" role="radiogroup" aria-label="디자인 테마"></div>
+      <aside class="col-inspector" aria-label="설정">
 
-        <div class="ref-block" id="refBlock">
+        <section class="tile">
           <div class="panel-head">
-            <h2>AI 추천 레이아웃</h2>
+            <h2><span class="pnum">01</span>테마</h2>
+            <span class="chip-soft" id="themeName">화이트 카드</span>
+          </div>
+          <div class="theme-grid" id="themeGrid" role="radiogroup" aria-label="디자인 테마"></div>
+        </section>
+
+        <section class="tile" id="refBlock">
+          <div class="panel-head">
+            <h2><span class="pnum">02</span>AI 추천 레이아웃</h2>
             <button type="button" class="mini-btn wide" data-action="recommend-design">추천 받기</button>
           </div>
           <p class="hint" id="refCtx">글을 분석해 핀터레스트 스타일 3~4안을 이유와 함께 고릅니다.</p>
@@ -121,126 +134,142 @@
           </div>
           <div class="palette-row" id="paletteRow" hidden></div>
           <p class="hint" id="refPhotoNote" hidden></p>
-        </div>
+        </section>
 
-        <div class="divider"></div>
-
-        <div class="field-row">
-          <label class="field">
-            <span>배지 텍스트 (표지)</span>
-            <input id="badgeInput" type="text" maxlength="24" placeholder="CARD NEWS" autocomplete="off" />
-          </label>
-          <label class="field">
-            <span>핸들</span>
-            <input id="handleInput" type="text" maxlength="30" placeholder="@your.handle" autocomplete="off" />
-          </label>
-        </div>
-
-        <div class="toggles">
-          <label class="switch"><input type="checkbox" id="showBadge" checked /><span>배지</span></label>
-          <label class="switch"><input type="checkbox" id="showHandle" checked /><span>핸들</span></label>
-          <label class="switch"><input type="checkbox" id="showPage" checked /><span>페이지 번호</span></label>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="panel-head">
-          <h2 id="editorTitle">선택 슬라이드</h2>
-          <div class="mini-actions">
-            <button type="button" class="mini-btn" data-action="move-up" aria-label="슬라이드 위로" title="위로">↑</button>
-            <button type="button" class="mini-btn" data-action="move-down" aria-label="슬라이드 아래로" title="아래로">↓</button>
-            <button type="button" class="mini-btn" data-action="duplicate-slide" aria-label="슬라이드 복제" title="복제">⧉</button>
-            <button type="button" class="mini-btn danger" data-action="delete-slide" aria-label="슬라이드 삭제" title="삭제">✕</button>
+        <section class="tile">
+          <div class="panel-head">
+            <h2><span class="pnum">03</span>표지 · 핸들</h2>
+            <span class="muted">공통</span>
           </div>
-        </div>
-        <div class="field-row">
+          <div class="field-row">
+            <label class="field">
+              <span>배지 텍스트 (표지)</span>
+              <input id="badgeInput" type="text" maxlength="24" placeholder="CARD NEWS" autocomplete="off" />
+            </label>
+            <label class="field">
+              <span>핸들</span>
+              <input id="handleInput" type="text" maxlength="30" placeholder="@your.handle" autocomplete="off" />
+            </label>
+          </div>
+          <div class="toggles">
+            <label class="switch"><input type="checkbox" id="showBadge" checked /><span>배지</span></label>
+            <label class="switch"><input type="checkbox" id="showHandle" checked /><span>핸들</span></label>
+            <label class="switch"><input type="checkbox" id="showPage" checked /><span>페이지 번호</span></label>
+          </div>
+        </section>
+
+        <section class="tile">
+          <div class="panel-head">
+            <h2 id="editorTitle">선택 슬라이드</h2>
+            <div class="mini-actions">
+              <button type="button" class="mini-btn" data-action="move-up" aria-label="슬라이드 위로" title="위로">↑</button>
+              <button type="button" class="mini-btn" data-action="move-down" aria-label="슬라이드 아래로" title="아래로">↓</button>
+              <button type="button" class="mini-btn" data-action="duplicate-slide" aria-label="슬라이드 복제" title="복제">⧉</button>
+              <button type="button" class="mini-btn danger" data-action="delete-slide" aria-label="슬라이드 삭제" title="삭제">✕</button>
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field">
+              <span>종류</span>
+              <select id="kindSelect">
+                <option value="cover">표지</option>
+                <option value="body">본문</option>
+                <option value="cta">마무리</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>이 슬라이드 배지</span>
+              <input id="slideBadge" type="text" maxlength="24" placeholder="비우면 표지 공통" autocomplete="off" />
+            </label>
+          </div>
           <label class="field">
-            <span>종류</span>
-            <select id="kindSelect">
-              <option value="cover">표지</option>
-              <option value="body">본문</option>
-              <option value="cta">마무리</option>
-            </select>
+            <span>제목 <em>**강조**</em></span>
+            <textarea id="titleInput" rows="2" spellcheck="false" placeholder="한 줄 제목"></textarea>
           </label>
           <label class="field">
-            <span>이 슬라이드 배지</span>
-            <input id="slideBadge" type="text" maxlength="24" placeholder="비우면 표지는 공통 배지" autocomplete="off" />
+            <span>본문 <em>**강조**</em></span>
+            <textarea id="bodyInput" rows="4" spellcheck="false" placeholder="한 장에 한 가지. 줄바꿈으로 문단을 나눕니다."></textarea>
           </label>
-        </div>
-        <label class="field">
-          <span>제목 <em>**강조**</em></span>
-          <textarea id="titleInput" rows="2" spellcheck="false" placeholder="한 줄 제목"></textarea>
-        </label>
-        <label class="field">
-          <span>본문 <em>**강조**</em></span>
-          <textarea id="bodyInput" rows="4" spellcheck="false" placeholder="한 장에 한 가지. 줄바꿈으로 문단을 나눕니다."></textarea>
-        </label>
-        <div class="hint-row">
-          <button type="button" class="mini-btn wide" data-action="wrap-em">**강조**</button>
-          <span class="hint">제목·본문에서 글자를 선택하고 누르면 감쌉니다.</span>
-        </div>
-        <p class="warn-line" id="emWarn" hidden>짝이 맞지 않는 <b>**</b> 는 글자 그대로 표시됩니다.</p>
+          <div class="hint-row">
+            <button type="button" class="mini-btn wide" data-action="wrap-em">**강조**</button>
+            <span class="hint">제목·본문에서 글자를 선택하고 누르면 감쌉니다.</span>
+          </div>
+          <p class="warn-line" id="emWarn" hidden>짝이 맞지 않는 <b>**</b> 는 글자 그대로 표시됩니다.</p>
+        </section>
 
-        <div class="divider"></div>
-
-        <div class="panel-head">
-          <h2>글 → 카드뉴스</h2>
-          <span class="muted">자동 분할</span>
-        </div>
-        <label class="field">
-          <span>긴 글 붙여넣기</span>
-          <textarea id="splitInput" rows="5" spellcheck="false" placeholder="메모나 글을 그대로 붙여넣으세요. 문장 단위로 나눠 표지·본문·마무리로 배분합니다."></textarea>
-        </label>
-        <div class="split-controls">
-          <label class="field inline">
-            <span>본문 장수</span>
-            <select id="splitCount">
-              <option value="2">2장</option>
-              <option value="3">3장</option>
-              <option value="4" selected>4장</option>
-              <option value="5">5장</option>
-              <option value="6">6장</option>
-            </select>
+        <section class="tile">
+          <div class="panel-head">
+            <h2><span class="pnum">05</span>글 → 카드뉴스</h2>
+            <span class="muted">자동 분할</span>
+          </div>
+          <label class="field">
+            <span>긴 글 붙여넣기</span>
+            <textarea id="splitInput" rows="5" spellcheck="false" placeholder="메모나 글을 그대로 붙여넣으세요. 문장 단위로 나눠 표지·본문·마무리로 배분합니다."></textarea>
           </label>
-          <button type="button" class="btn btn-primary" data-action="auto-split">자동 슬라이드 분할</button>
-        </div>
-        <p class="hint">첫 문장은 표지, 마지막은 CTA로. 숫자는 자동으로 <b>**강조**</b>합니다.</p>
+          <div class="split-controls">
+            <label class="field inline">
+              <span>본문 장수</span>
+              <select id="splitCount">
+                <option value="2">2장</option>
+                <option value="3">3장</option>
+                <option value="4" selected>4장</option>
+                <option value="5">5장</option>
+                <option value="6">6장</option>
+              </select>
+            </label>
+            <button type="button" class="btn btn-primary" data-action="auto-split">자동 슬라이드 분할</button>
+          </div>
+          <p class="hint">첫 문장은 표지, 마지막은 CTA로. 숫자는 자동으로 <b>**강조**</b>합니다.</p>
 
-        <div class="pro-box" id="proBox">
-          <button type="button" class="btn pro-btn" data-action="pro-generate" data-pro-action>
-            <span class="pro-spark" aria-hidden="true">✨</span><span class="pro-label">Pro AI로 8장 카드+30초 대본 생성</span>
-          </button>
-          <p class="pro-state" id="proState" data-pro-state
-             data-pro-free="무료 모드 · 붙여넣은 글은 지금처럼 자동 분할합니다. Pro를 연결하면 8장 카드와 30초 대본을 한 번에 씁니다."
-             data-pro-pro="Pro 연결됨 · 주제·타깃·포인트로 8장 카드와 30초 대본을 한 번에 만들어 채웁니다.">무료 모드 · 붙여넣은 글은 지금처럼 자동 분할합니다. Pro를 연결하면 8장 카드와 30초 대본을 한 번에 씁니다.</p>
-          <button type="button" class="btn btn-ghost btn-sm" id="proConnect">Pro 연결 / 관리</button>
-        </div>
+          <div class="pro-box" id="proBox">
+            <button type="button" class="btn pro-btn" data-action="pro-generate" data-pro-action>
+              <span class="pro-spark" aria-hidden="true">✨</span><span class="pro-label">Pro AI로 8장 카드+30초 대본 생성</span>
+            </button>
+            <p class="pro-state" id="proState" data-pro-state
+               data-pro-free="무료 모드 · 붙여넣은 글은 지금처럼 자동 분할합니다. Pro를 연결하면 8장 카드와 30초 대본을 한 번에 씁니다."
+               data-pro-pro="Pro 연결됨 · 주제·타깃·포인트로 8장 카드와 30초 대본을 한 번에 만들어 채웁니다.">무료 모드 · 붙여넣은 글은 지금처럼 자동 분할합니다. Pro를 연결하면 8장 카드와 30초 대본을 한 번에 씁니다.</p>
+            <button type="button" class="btn btn-ghost btn-sm" id="proConnect">Pro 연결 / 관리</button>
+          </div>
+        </section>
 
-        <div class="divider"></div>
-
-        <div class="panel-head">
-          <h2>카피 진단</h2>
-          <span class="grade-chip" id="copyGrade">—</span>
-        </div>
-        <div class="score-line">
-          <b id="copyScore">0</b><span>/ 100 · 8대 트리거</span>
-        </div>
-        <div class="trigger-mini" id="triggerMini"></div>
-        <p class="hint" id="copyTip">제목과 본문을 진단하려면 슬라이드를 고르세요.</p>
-        <div class="btn-row">
-          <button type="button" class="btn btn-ghost" data-action="correct-selected">추상어·공급자어 교정</button>
-          <button type="button" class="btn btn-primary" data-action="open-copy-lab">프레임워크 변환</button>
-        </div>
+        <section class="tile">
+          <div class="panel-head">
+            <h2><span class="pnum">06</span>카피 진단</h2>
+            <span class="grade-chip" id="copyGrade">—</span>
+          </div>
+          <div class="score-line">
+            <b id="copyScore">0</b><span>/ 100 · 8대 트리거</span>
+          </div>
+          <div class="trigger-mini" id="triggerMini"></div>
+          <p class="hint" id="copyTip">제목과 본문을 진단하려면 슬라이드를 고르세요.</p>
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" data-action="correct-selected">추상어·공급자어 교정</button>
+            <button type="button" class="btn btn-primary" data-action="open-copy-lab">프레임워크 변환</button>
+          </div>
+        </section>
       </aside>
     </div>
   </section>
 
   <!-- ── 디자인 스튜디오 v2 ─────────────────────────────── -->
   <section class="view" id="view-designv2" role="tabpanel" aria-label="디자인 스튜디오 v2" hidden>
+    <div class="view-head">
+      <div class="vh-main">
+        <p class="eyebrow"><span class="live-dot"></span>Design engine v2 · photo → blueprint</p>
+        <h1>디자인 <em>v2</em></h1>
+        <p class="lead">레퍼런스 사진 한 장을 설계도로 바꿔 같은 구도로 다시 그립니다. 폰트·질감·브랜드 키트를 고정해 다음 편에 그대로.</p>
+      </div>
+      <div class="vh-meta" aria-hidden="true">
+        <span class="meta-tile"><b>6</b><em>폰트 믹스</em></span>
+        <span class="meta-tile"><b>4</b><em>종이 질감</em></span>
+        <span class="meta-tile"><b>25</b><em>자 밀도</em></span>
+      </div>
+    </div>
+
     <div class="v2-layout">
-      <aside class="panel v2-side">
+      <aside class="tile v2-side">
         <div class="panel-head">
-          <h2>카드 세트 맥락</h2>
+          <h2><span class="pnum">01</span>카드 세트 맥락</h2>
           <span class="chip" id="v2CtxTag">자동 분석</span>
         </div>
         <p class="hint" id="v2Ctx">글을 분석해 업종·무드·글자 밀도를 뽑습니다.</p>
@@ -280,9 +309,9 @@
       </aside>
 
       <div class="v2-main">
-        <div class="panel v2-bp-panel">
+        <div class="tile v2-bp-panel">
           <div class="panel-head">
-            <h2>레퍼런스 사진 → 90% 설계도 복제</h2>
+            <h2><span class="pnum">02</span>레퍼런스 사진 → 90% 설계도 복제</h2>
             <span class="muted" id="v2BpState">사진 1장 → JSON 1개</span>
           </div>
           <p class="hint">마음에 드는 카드·포스터 1장을 구독 중인 AI에 첨부하고 아래 프롬프트를 붙여넣으세요. AI가 좌표·색·폰트를 잰 JSON을 주면, 같은 구도로 이 카드 세트를 다시 그립니다.</p>
@@ -305,7 +334,7 @@
           <div class="parse-status" id="v2BpWarnings"></div>
         </div>
 
-        <div class="panel">
+        <div class="tile">
           <div class="panel-head">
             <h2>카드 세트 미리보기</h2>
             <span class="muted" id="v2SetName"></span>
@@ -325,14 +354,26 @@
     </div>
   </section>
 
-
   <!-- ── 숏폼 대본·자막 ──────────────────────────────────── -->
   <section class="view" id="view-script" role="tabpanel" aria-label="숏폼 대본·자막" hidden>
+    <div class="view-head">
+      <div class="vh-main">
+        <p class="eyebrow"><span class="live-dot"></span>Shortform · 30 sec · 4 beats</p>
+        <h1>숏폼 <em>대본·자막</em></h1>
+        <p class="lead">0~3 / 3~12 / 12~25 / 25~30초 4구간 대본과 한 줄 15자 자막, <b>.srt</b>까지 한 번에.</p>
+      </div>
+      <div class="vh-meta" aria-hidden="true">
+        <span class="meta-tile"><b>4</b><em>구간</em></span>
+        <span class="meta-tile"><b>30</b><em>초</em></span>
+        <span class="meta-tile"><b>15</b><em>자 자막</em></span>
+      </div>
+    </div>
+
     <div class="script-layout">
-      <div class="panel script-form">
+      <div class="tile script-form">
         <div class="panel-head">
-          <h2>30초 대본 만들기</h2>
-          <span class="muted">0~3 · 3~12 · 12~25 · 25~30초</span>
+          <h2><span class="pnum">01</span>30초 대본 만들기</h2>
+          <span class="muted">0~3 · 3~12 · 12~25 · 25~30</span>
         </div>
         <label class="field">
           <span>주제</span>
@@ -367,9 +408,9 @@
       <div class="script-out">
         <div class="beats" id="beatList"></div>
 
-        <div class="panel copy-panel">
+        <div class="tile copy-panel">
           <div class="panel-head">
-            <h2>대본 카피 진단</h2>
+            <h2><span class="pnum">02</span>대본 카피 진단</h2>
             <span class="grade-chip" id="scriptGrade">—</span>
           </div>
           <div class="score-line">
@@ -384,9 +425,9 @@
           </div>
         </div>
 
-        <div class="panel subtitle-panel">
+        <div class="tile subtitle-panel">
           <div class="panel-head">
-            <h2>자막 미리보기</h2>
+            <h2><span class="pnum">03</span>자막 미리보기</h2>
             <span class="muted" id="subCount">0줄 · 한 줄 15자</span>
           </div>
           <pre class="srt-preview" id="srtPreview" aria-label="SRT 자막 미리보기"></pre>
@@ -404,10 +445,23 @@
 
   <!-- ── AI 브리지 ──────────────────────────────────────── -->
   <section class="view" id="view-bridge" role="tabpanel" aria-label="AI 브리지" hidden>
+    <div class="view-head">
+      <div class="vh-main">
+        <p class="eyebrow"><span class="live-dot"></span>Bring your own AI · 3 providers</p>
+        <h1>AI <em>브리지</em></h1>
+        <p class="lead">이미 쓰는 ChatGPT·Claude·Gemini 구독을 그대로. 프롬프트 복사 → 새 창에 붙여넣기 → 답변을 붙이면 적용됩니다.</p>
+      </div>
+      <div class="vh-meta" aria-hidden="true">
+        <span class="meta-tile"><b>3</b><em>AI</em></span>
+        <span class="meta-tile"><b>0</b><em>API 요금</em></span>
+        <span class="meta-tile"><b>4</b><em>출력 형식</em></span>
+      </div>
+    </div>
+
     <div class="bridge-layout">
-      <div class="panel bridge-left">
+      <div class="tile bridge-left">
         <div class="panel-head">
-          <h2>내 구독 AI로 만들기</h2>
+          <h2><span class="pnum">01</span>내 구독 AI로 만들기</h2>
           <span class="muted">복사 → 열기 → 붙여넣기</span>
         </div>
         <p class="hint">버튼을 누르면 <b>완성된 프롬프트가 복사</b>되고 그 AI가 새 창에 열립니다. 이미 로그인된 구독 계정을 그대로 쓰므로 API 요금이 나가지 않습니다.</p>
@@ -452,9 +506,9 @@
         <p class="hint" id="geminiResult" aria-live="polite"></p>
       </div>
 
-      <div class="panel bridge-right">
+      <div class="tile bridge-right">
         <div class="panel-head">
-          <h2>AI 답변 붙여넣기</h2>
+          <h2><span class="pnum">02</span>AI 답변 붙여넣기</h2>
           <span class="muted" id="pasteHint">자동 인식</span>
         </div>
         <textarea id="bridgePaste" rows="12" spellcheck="false" placeholder="ChatGPT·Claude·Gemini가 준 답변을 그대로 붙여넣으세요. JSON이든 설명 섞인 문장이든 알아서 읽습니다."></textarea>
@@ -470,10 +524,22 @@
 
   <!-- ── 작업함 ─────────────────────────────────────────── -->
   <section class="view" id="view-shelf" role="tabpanel" aria-label="작업함" hidden>
+    <div class="view-head">
+      <div class="vh-main">
+        <p class="eyebrow"><span class="live-dot"></span>Shelf · localStorage only</p>
+        <h1>작업함</h1>
+        <p class="lead">카드뉴스와 대본을 한 묶음으로 저장합니다. 이 브라우저에만 남고 서버로 보내지 않습니다.</p>
+      </div>
+      <div class="vh-meta" aria-hidden="true">
+        <span class="meta-tile"><b>30</b><em>최대 저장</em></span>
+        <span class="meta-tile"><b>0</b><em>서버 전송</em></span>
+      </div>
+    </div>
+
     <div class="shelf">
-      <div class="panel">
+      <div class="tile">
         <div class="panel-head">
-          <h2>현재 작업 저장</h2>
+          <h2><span class="pnum">01</span>현재 작업 저장</h2>
           <span class="muted">카드뉴스 + 대본을 함께</span>
         </div>
         <form id="saveForm" class="save-form" autocomplete="off">
@@ -494,8 +560,8 @@
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head"><h2>현재 작업</h2><span class="muted" id="currentMeta"></span></div>
+      <div class="tile">
+        <div class="panel-head"><h2><span class="pnum">02</span>현재 작업</h2><span class="muted" id="currentMeta"></span></div>
         <ul class="current-list" id="currentList"></ul>
         <div class="divider"></div>
         <div class="panel-head"><h2>초기화</h2></div>

@@ -4,9 +4,12 @@
 브라우저 전용 스튜디오. 여기에 **마케팅 심리학 엔진**과 **핀터레스트 디자인 DNA 엔진**, 그리고
 **내 구독 AI(ChatGPT·Claude·Gemini) 원클릭 브리지**를 얹었습니다.
 
+화면은 **A안 Crisp Bento**(순백 서피스 · 1px 라인 · 코발트 단일 액센트)로 통일했습니다.
+
 서버·빌드·외부 트래커 없이 정적 파일만으로 동작하고, 작업 내용은 이 브라우저 `localStorage`에만 저장됩니다.
 
-- 미리보기: `preview-v2.png` (디자인 스튜디오 v2) · `preview-v2-mobile.png` · `preview-upgraded.png` · `preview-desktop.png` · `preview-script.png` · `preview-bridge.png` · `preview-mobile.png`
+- 미리보기: `preview-v2.png` (디자인 스튜디오 v2) · `preview-v2-mobile.png` · `preview-upgraded.png` · `preview-desktop.png` · `preview-script.png` · `preview-bridge.png` · `preview-mobile.png` · `preview-pro.png`
+- **디자인 시스템(A안)**: `#FAFAFA` 바탕 / `#FFFFFF` 카드 · 1px `#E7E8EA` 보더 · 16px 카드 라운드 · 잉크 `#0C0D0F` · 코발트 `#2F5BFF` 단일 액센트. 본문 텍스트 대비는 실측 **4.62:1 ~ 19.44:1**(AA 통과), 포커스 링 5.17:1. 다크 모드는 같은 구조의 잉크 테마.
 - **Pro AI 연결(선택)**: 헤더의 `무료 모드 · API 연결` 배지에서 OpenAI·Gemini·Claude·자체 서버를 연결하면, 카드 분할·숏폼 대본 탭의 **✨ Pro AI로 8장 카드+30초 대본 생성**이 슬라이드 8장과 4비트 대본·자막을 한 번에 채웁니다. 연결하지 않으면 붙여넣은 글의 자동 분할과 무료 대본 엔진이 그대로 동작합니다. 키는 기본 `sessionStorage`. 엔진: `engines/pro-api-connector.js` · `engines/pro-studio.js`
 - 같은 패밀리: `../shortform-radar/` (떡상 레이더) — IBM Plex Sans KR, 라이트/다크 토글, 빌드 없는 HTML/CSS/JS
 
@@ -171,15 +174,15 @@ Google AI Studio에서 만든 무료 키를 넣으면 복사·붙여넣기 없�
 
 ```
 index.html            화면 구조(탭 4개: 카드뉴스 · 대본 · AI 브리지 · 작업함) + 카피 랩 모달
-styles.css            패밀리 룩(IBM Plex Sans KR, 라이트/다크, 반응형)
+styles.css            A안 Crisp Bento 디자인 시스템(IBM Plex Sans KR, 1px 라인·16px 타일·코발트 액센트, 라이트/다크, 반응형)
 core.js               DOM 없는 순수 로직 — 테마·비율, **강조** 파싱, 줄바꿈, 자동 분할, 대본·자막·SRT,
                       ZIP, 프리셋 검증 + 엔진 연동(진단·프레임워크·추천·팔레트) + AI 브리지 프롬프트·파서
 preset-render.js      레퍼런스 8종 Canvas 렌더러(4축 DNA: 레이아웃 존·이미지·그래픽·타이포, 한국어 어절 줄바꿈)
 app.js                Canvas 렌더러 연결, 화면 조작, PNG/ZIP/SRT, 사진·팔레트, 프레임워크 모달, 브리지, Gemini
 engines/copy-psych-engine.js    카피 심리학 엔진 사본 (8트리거·4프레임워크·감점 표현)
 engines/design-ref-engine.js    디자인 엔진 v2.0.0 사본 (프리셋 8·추천·팔레트·DNA·블루프린트·믹스·브랜드킷)
-test.js               단위 테스트 460개 (node)
-uitest.py             실제 Chrome 검증 314개 (데스크톱 1440×900 · 모바일 390×844)
+test.js               단위 테스트 505개 (node)
+uitest.py             실제 Chrome 검증 343개 (데스크톱 1440×900 · 모바일 390×844)
 assets/fonts/         IBM Plex Sans KR (Regular/SemiBold/Bold, woff2)
 ```
 
@@ -193,12 +196,12 @@ assets/fonts/         IBM Plex Sans KR (Regular/SemiBold/Bold, woff2)
 python3 uitest.py
 ```
 
-- 단위: **460/460 통과** — 기존 237개 + 엔진 로드, 카피 진단(8트리거·등급·개선안), 안전 교정(문장 보존),
+- 단위: **505/505 통과** — 기존 237개 + 엔진 로드, 카피 진단(8트리거·등급·개선안), 안전 교정(문장 보존),
   디자인 추천 3~4안·이유·팔레트, 팔레트→테마 대비, 설계/사진/팔레트 저장 검증, 프레임워크 4종→슬라이드·대본,
   브리지 프롬프트 스키마, JSON·산문·쉼표 오류 파싱, Gemini 응답·오류 문구,
   **디자인 v2**(레퍼런스 검색 주소, 해부 프롬프트, 블루프린트 파싱·세트 렌더, 폰트 믹스·질감·밀도, 브랜드 키트 왕복,
   포스터형 재배치), 그리고 **API 키가 카드·프리셋에 들어가지 않는지**, **외부 URL이 AI 사이트 4개와 레퍼런스 검색 2곳뿐인지**까지 검사합니다.
-- 브라우저: **314/314 통과** — 추천→적용→PNG, 8 프리셋 × 3 비율 = 24조합 렌더, 사진 업로드 배치,
+- 브라우저: **343/343 통과** — 추천→적용→PNG, 8 프리셋 × 3 비율 = 24조합 렌더, 사진 업로드 배치,
   레퍼런스 이미지 팔레트 추출·붙여넣기, 카피 진단·교정, 프레임워크 → 슬라이드/대본, 프롬프트 복사 +
   새 창 열기(3곳), AI 답변 자동 파싱·적용, Gemini 키 저장·모델 확인·생성·오류(모의 응답),
   기존 기능 전체(테마 6×3, ZIP, SRT, 클립보드, 프리셋, 다크 모드), 모바일 넘침 0,
