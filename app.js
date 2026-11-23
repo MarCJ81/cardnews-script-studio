@@ -1483,16 +1483,11 @@
   }
 
   function freePromptCards(input) {
-    const lines = [];
-    lines.push('[주제] ' + String(input.topic || '').slice(0, 120));
-    if (input.target) lines.push('[독자] ' + String(input.target).slice(0, 80));
-    if (input.point) lines.push('[포인트] ' + String(input.point).slice(0, 160));
-    lines.push('[비율] ' + state.project.ratio);
-    lines.push('');
-    lines.push('위 주제로 카드뉴스 6장을 아래 JSON 만으로 출력하세요. 설명·코드펜스 금지.');
-    lines.push('{"cover":{"headline":"","sub":""},"cards":[{"headline":"","body":""}],"last":{"headline":"","body":""}}');
-    lines.push('조건: headline 20자 이내, body 45자 이내, cards 는 정확히 4장, 숫자·사실은 지어내지 말 것, 마지막 장은 저장·팔로우 유도.');
-    return lines.join('\n');
+    // 워커는 짧은 입력에서 안정적이다. 무료 체험은 6장 제목만 받는다.
+    var topic = String((input && (input.topic || input.title)) || '').trim().slice(0, 40) || '주제';
+    var point = String((input && (input.point || input.body)) || '').replace(/\s+/g, ' ').slice(0, 50);
+    return '한국어 카드뉴스 맛보기. 주제: ' + topic + (point ? '. 요점: ' + point : '') +
+      '. 6장 제목만, JSON 한 줄로: {"cards":[{"headline":"…"}×6]}. 제목은 15자 이내.';
   }
 
   function parseFreeCards(text) {
