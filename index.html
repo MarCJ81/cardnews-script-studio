@@ -99,6 +99,7 @@
           <button type="button" class="btn btn-ghost" data-action="download-each">전체 개별 저장</button>
           <button type="button" class="btn" data-action="download-all">전체 ZIP</button>
           <button type="button" class="btn btn-primary" data-action="download-current">현재 슬라이드 PNG</button>
+          <button type="button" class="btn btn-ghost" data-action="export-hires">고해상도 내보내기</button>
         </div>
         <p class="stage-note" id="stageNote">1080 × 1350 PNG · 강조는 <b>**이렇게**</b> 감쌉니다.</p>
       </section>
@@ -228,7 +229,10 @@
             <p class="pro-state" id="proState" data-pro-state
                data-pro-free="무료 모드 · 붙여넣은 글은 지금처럼 자동 분할합니다. Pro를 연결하면 8장 카드와 30초 대본을 한 번에 씁니다."
                data-pro-pro="Pro 연결됨 · 주제·타깃·포인트로 8장 카드와 30초 대본을 한 번에 만들어 채웁니다.">무료 모드 · 붙여넣은 글은 지금처럼 자동 분할합니다. Pro를 연결하면 8장 카드와 30초 대본을 한 번에 씁니다.</p>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="free-generate" id="freeGenerate">무료 AI 맛보기</button>
             <button type="button" class="btn btn-ghost btn-sm" id="proConnect">Pro 연결 / 관리</button>
+            <p class="pro-state freeai-line"><span id="freeBadge"></span></p>
+            <div id="freeUpgrade" class="free-upgrade-slot"></div>
           </div>
         </section>
 
@@ -298,6 +302,7 @@
           <div class="btn-row">
             <button type="button" class="btn btn-ghost" data-action="v2-save-kit">현재 세트 고정</button>
             <button type="button" class="btn btn-ghost" data-action="v2-copy-kit">JSON 복사</button>
+            <button type="button" class="btn btn-ghost" data-action="v2-kit-sheet">브랜드 시트 PNG</button>
           </div>
           <div class="kit-list" id="v2KitList"></div>
           <details class="kit-import">
@@ -580,13 +585,50 @@
   </div>
 </footer>
 
+<div class="hires-backdrop" id="hiresModal" hidden>
+  <div class="hires-card" role="dialog" aria-modal="true" aria-labelledby="hiresTitle">
+    <div class="hires-head">
+      <h2 id="hiresTitle">고해상도 내보내기</h2>
+      <button type="button" class="icon-btn" data-action="close-hires" aria-label="닫기">✕</button>
+    </div>
+    <p class="hint">같은 카드를 더 큰 픽셀로 다시 그립니다. 2배·3배는 인쇄·대형 화면에 쓰고, ZIP은 압축해서 한 파일로 묶습니다.</p>
+    <div class="hires-grid">
+      <label class="field"><span>해상도</span>
+        <select id="hiresScale" class="input select">
+          <option value="1">1배 · 원본</option>
+          <option value="2" selected>2배 · 고해상도</option>
+          <option value="3">3배 · 인쇄용</option>
+        </select>
+      </label>
+      <label class="field"><span>형식</span>
+        <select id="hiresFormat" class="input select">
+          <option value="png" selected>PNG (무손실)</option>
+          <option value="jpg">JPG (용량 작게)</option>
+        </select>
+      </label>
+      <label class="field"><span>범위</span>
+        <select id="hiresScope" class="input select">
+          <option value="current" selected>현재 장</option>
+          <option value="all">전체 장 (ZIP)</option>
+        </select>
+      </label>
+    </div>
+    <p class="hint" id="hiresNote">2배 선택 시 2160 × 2700 PNG로 저장합니다.</p>
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" data-action="run-hires" id="hiresRun">내보내기</button>
+      <button type="button" class="btn btn-ghost" data-action="close-hires">취소</button>
+      <span class="hint" id="hiresStatus"></span>
+    </div>
+  </div>
+</div>
+
 <div class="toast-root" id="toastRoot" aria-live="polite"></div>
 
 <!-- 카피 진단 · 프레임워크 -->
 <div class="modal" id="copyLab" hidden>
   <div class="modal-backdrop" data-action="close-copy-lab"></div>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="copyLabTitle">
-    <div class="modal-head">
+    <div class="hires-head">
       <h2 id="copyLabTitle">카피 진단 · 프레임워크</h2>
       <span class="score-pill"><b id="labScore">0</b><span id="labGrade">—</span></span>
       <button type="button" class="icon-btn" data-action="close-copy-lab" aria-label="닫기">✕</button>
@@ -631,6 +673,7 @@
 
 <script src="engines/pro-api-connector.js"></script>
 <script src="engines/pro-studio.js"></script>
+<script src="engines/free-ai.js"></script>
 <script src="engines/copy-psych-engine.js"></script>
 <script src="engines/design-ref-engine.js"></script>
 <script src="core.js"></script>

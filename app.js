@@ -896,6 +896,168 @@
     return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
   }
 
+  /* ── 벤더 로더 (필요할 때만) ──────────────────────────
+     JSZip·html-to-image 는 export 를 실제로 누를 때 한 번만 받는다.
+     첫 화면 용량은 그대로 두고, 실패하면 내장 ZIP 으로 넘어간다. */
+  const vendorState = {};
+  function loadVendor(name) {
+    if (vendorState[name]) return vendorState[name];
+    const src = name === 'jszip' ? 'assets/vendor/jszip.min.js' : 'assets/vendor/html-to-image.js';
+    vendorState[name] = new Promise((resolve, reject) => {
+      const el = document.createElement('script');
+      el.src = src;
+      el.async = true;
+      el.onload = () => resolve(true);
+      el.onerror = () => reject(new Error(name + ' 로드 실패'));
+      document.head.appendChild(el);
+    });
+    return vendorState[name];
+  }
+
+  /* ══════════════════════════════════════════════════════
+     고해상도 내보내기 — 같은 카드를 배율만 올려 다시 그린다
+     ══════════════════════════════════════════════════════ */
+  function hiresNote() {
+    const scale = Number(($('#hiresScale') || {}).value || 2);
+    const fmt = ($('#hiresFormat') || {}).value || 'png';
+    const R = C.ratioById(state.project.ratio);
+    const note = $('#hiresNote');
+    if (!note) return;
+    note.textContent = scale + '배 선택 시 ' + Math.round(R.w * scale) + ' × ' + Math.round(R.h * scale) +
+      ' ' + (fmt === 'jpg' ? 'JPG' : 'PNG') + '로 저장합니다.' +
+      (scale > 1 ? ' 큰 배율은 시간이 조금 더 걸립니다.' : '');
+  }
+
+  function openHires() {
+    const modal = $('#hiresModal');
+    if (!modal) return;
+    modal.hidden = false;
+    hiresNote();
+    const run = $('#hiresRun');
+    if (run) run.focus();
+  }
+
+  function closeHires() {
+    const modal = $('#hiresModal');
+    if (modal) modal.hidden = true;
+    const st = $('#hiresStatus');
+    if (st) st.textContent = '';
+  }
+
+  function slideBlobAt(index, scale, format, quality) {
+    const canvas = document.createElement('canvas');
+    drawSlide(canvas, state.project, index, { scale });
+    return new Promise(resolve => canvas.toBlob(resolve, format === 'jpg' ? 'image/jpeg' : 'image/png', quality || 0.92));
+  }
+
+  async function runHires() {
+    await document.fonts.ready;
+    const scale = Math.max(1, Math.min(3, Number(($('#hiresScale') || {}).value || 2)));
+    const format = ($('#hiresFormat') || {}).value === 'jpg' ? 'jpg' : 'png';
+    const scope = ($('#hiresScope') || {}).value === 'all' ? 'all' : 'current';
+    const status = $('#hiresStatus');
+    const runBtn = $('#hiresRun');
+    const slides = state.project.slides;
+    const tag = state.project.ratio + '-' + scale + 'x';
+    if (runBtn) runBtn.disabled = true;
+    try {
+      if (scope === 'current') {
+        if (status) status.textContent = '그리는 중…';
+        const blob = await slideBlobAt(state.selected, scale, format);
+        if (!blob) { toast('PNG를 만들지 못했습니다.', 'warn'); return; }
+        download(blob, 'cardnews-' + tag + '-' + pad2(state.selected + 1) + '.' + format);
+        toast(Math.round(blob.size / 1024) + 'KB · ' + scale + '배 ' + format.toUpperCase() + '로 저장했습니다.', 'ok');
+        closeHires();
+        return;
+      }
+      const files = [];
+      for (let i = 0; i < slides.length; i++) {
+        if (status) status.textContent = '그리는 중… ' + (i + 1) + '/' + slides.length;
+        const blob = await slideBlobAt(i, scale, format);
+        if (!blob) continue;
+        files.push({ name: 'cardnews-' + tag + '-' + pad2(i + 1) + '.' + format, data: new Uint8Array(await blob.arrayBuffer()) });
+      }
+      if (!files.length) { toast('만든 이미지가 없습니다.', 'warn'); return; }
+      if (status) status.textContent = '압축하는 중…';
+      const rawBytes = files.reduce((a, f) => a + f.data.length, 0);
+      let zipBytes = null;
+      try {
+        await loadVendor('jszip');
+        const zip = new window.JSZip();
+        files.forEach(f => zip.file(f.name, f.data));
+        const out = await zip.generateAsync({
+          type: 'uint8array',
+          compression: 'DEFLATE',
+          compressionOptions: { level: 6 },
+        }, meta => {
+          if (status && meta && meta.percent) status.textContent = '압축하는 중… ' + Math.round(meta.percent) + '%';
+        });
+        zipBytes = out;
+      } catch (e) {
+        zipBytes = C.buildZip(files);
+      }
+      download(new Blob([zipBytes], { type: 'application/zip' }), 'cardnews-' + tag + '-' + files.length + '.zip');
+      const pct = rawBytes ? Math.round((1 - zipBytes.length / rawBytes) * 100) : 0;
+      toast(files.length + '장 · ' + Math.round(zipBytes.length / 1024) + 'KB (원본 대비 ' + pct + '% 압축)', 'ok');
+      closeHires();
+    } catch (e) {
+      toast('내보내기 중 문제가 생겼습니다: ' + (e && e.message ? e.message : e), 'warn');
+    } finally {
+      if (runBtn) runBtn.disabled = false;
+      if (status) status.textContent = '';
+    }
+  }
+
+  /** data: URL → Blob. 네트워크를 타지 않는다(앱의 '외부 전송 0' 약속 유지). */
+  function dataUrlToBlob(dataUrl) {
+    const parts = String(dataUrl).split(',');
+    const head = parts[0] || '';
+    const body = parts[1] || '';
+    const mime = (head.match(/data:([^;]+)/) || [])[1] || 'image/png';
+    const bin = atob(body);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime });
+  }
+
+  /* ── 브랜드 시트 PNG (DOM → 이미지, html-to-image) ──────── */
+  async function exportKitSheet() {
+    const kit = v2CurrentKit();
+    if (!kit) { toast('먼저 브랜드 키트를 고정하거나 불러와 주세요.', 'warn'); return; }
+    const name = kit.name || '브랜드 키트';
+    const mix = v2MixName(kit.type && kit.type.fontMix);
+    const grain = v2GrainName(kit.grain && kit.grain.id);
+    const palette = (kit.palette && (kit.palette.bg || kit.palette.ink)) ? [
+      { label: '배경', value: kit.palette.bg },
+      { label: '본문', value: kit.palette.ink },
+      { label: '강조', value: kit.palette.accent || kit.palette.highlight },
+    ].filter(x => x.value) : [];
+    const node = document.createElement('div');
+    node.style.cssText = 'position:fixed;left:-10000px;top:0;width:760px;padding:40px;background:#FFFFFF;color:#16181D;font-family:inherit;box-sizing:border-box;';
+    node.innerHTML =
+      '<div style="font-size:12px;letter-spacing:.18em;color:#6B7280;margin-bottom:8px;">BRAND KIT</div>' +
+      '<div style="font-size:34px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px;">' + esc(name) + '</div>' +
+      '<div style="font-size:14px;color:#4B5563;margin-bottom:24px;">폰트 믹스 ' + esc(mix) + ' · 종이 질감 ' + esc(grain) + '</div>' +
+      (palette.length ? '<div style="display:flex;gap:12px;margin-bottom:22px;">' + palette.map(x =>
+        '<div style="flex:1"><div style="height:86px;border-radius:10px;border:1px solid rgba(0,0,0,.08);background:' + esc(x.value) + ';"></div>' +
+        '<div style="font-size:12px;color:#6B7280;margin-top:6px;">' + esc(x.label) + ' ' + esc(x.value) + '</div></div>').join('') + '</div>' : '') +
+      '<div style="font-size:13px;color:#6B7280;">카드뉴스·대본 스튜디오에서 만든 브랜드 시트 · ' + new Date().toLocaleDateString('ko-KR') + '</div>';
+    document.body.appendChild(node);
+    try {
+      await loadVendor('h2i');
+      const lib = window.htmlToImage;
+      if (!lib || typeof lib.toPng !== 'function') throw new Error('html-to-image 없음');
+      const dataUrl = await lib.toPng(node, { pixelRatio: 2, backgroundColor: '#FFFFFF', cacheBust: true });
+      const blob = dataUrlToBlob(dataUrl);
+      download(blob, 'brand-sheet-' + String(name).replace(/[^\w가-힣-]+/g, '-').slice(0, 24) + '.png');
+      toast('브랜드 시트 PNG를 저장했습니다.', 'ok');
+    } catch (e) {
+      toast('브랜드 시트를 만들지 못했습니다: ' + (e && e.message ? e.message : e), 'warn');
+    } finally {
+      node.remove();
+    }
+  }
+
   async function downloadCurrent() {
     await document.fonts.ready;
     const blob = await slideBlob(state.selected);
@@ -1308,6 +1470,100 @@
     if (mid.length > half) beats.push({ narration: pick(mid.slice(half)), screen: scenes(mid.slice(half)) });
     if (ctaLine && ctaLine !== hookLine) beats.push({ narration: ctaLine, screen: scenes(lines.slice(-1)) });
     return beats.filter(b => b.narration).slice(0, 4);
+  }
+
+  /* ── 무료 AI 맛보기 (free-ai.js) ────────────────────────
+     Worker 는 출력이 900토큰이라 8장을 다 쓰기 어렵다.
+     표지 1 + 본문 4 + 마무리 1 = 6장으로 짧게 받고, 나머지는
+     지금처럼 자동 분할로 채운다. */
+  const FREE = window.FreeAI || null;
+
+  function freeStateLine(text) {
+    $$('[data-pro-state]').forEach(el => { el.textContent = text; });
+  }
+
+  function freePromptCards(input) {
+    const lines = [];
+    lines.push('[주제] ' + String(input.topic || '').slice(0, 120));
+    if (input.target) lines.push('[독자] ' + String(input.target).slice(0, 80));
+    if (input.point) lines.push('[포인트] ' + String(input.point).slice(0, 160));
+    lines.push('[비율] ' + state.project.ratio);
+    lines.push('');
+    lines.push('위 주제로 카드뉴스 6장을 아래 JSON 만으로 출력하세요. 설명·코드펜스 금지.');
+    lines.push('{"cover":{"headline":"","sub":""},"cards":[{"headline":"","body":""}],"last":{"headline":"","body":""}}');
+    lines.push('조건: headline 20자 이내, body 45자 이내, cards 는 정확히 4장, 숫자·사실은 지어내지 말 것, 마지막 장은 저장·팔로우 유도.');
+    return lines.join('\n');
+  }
+
+  function parseFreeCards(text) {
+    const raw = String(text || '');
+    const a = raw.indexOf('{');
+    const b = raw.lastIndexOf('}');
+    if (a < 0 || b <= a) return null;
+    try {
+      const data = JSON.parse(raw.slice(a, b + 1));
+      if (data && (data.cover || data.cards || data.last)) return data;
+    } catch (e) { /* 아래에서 한 번 더 시도 */ }
+    return null;
+  }
+
+  function runFreeCards() {
+    if (!FREE) { toast('무료 체험 모듈을 불러오지 못했습니다. 새로고침해 주세요.', 'warn'); return; }
+    if (state.pro.busy) return;
+    const input = proInput();
+    if (!input.topic) {
+      toast('주제를 먼저 입력해 주세요.', 'warn');
+      (els.topicInput || els.splitInput).focus();
+      return;
+    }
+    const btn = $('#freeGenerate');
+    const host = $('#freeUpgrade');
+    if (host) host.innerHTML = '';
+    state.pro.busy = true;
+    if (btn) { btn.disabled = true; btn.textContent = '무료 AI가 쓰는 중…'; }
+    freeStateLine('무료 체험으로 카드를 쓰는 중… (보통 3~10초)');
+    FREE.generate({
+      prompt: freePromptCards(input),
+      system: '한국어 카드뉴스를 쓰는 편집자다. 짧고 구체적으로 쓰고, 없는 숫자는 만들지 않는다. 출력은 JSON 하나만.',
+      options: { temperature: 0.7, maxTokens: 900, json: true },
+    }).then(res => {
+      state.pro.busy = false;
+      if (btn) { btn.disabled = false; btn.textContent = '무료 AI 맛보기'; }
+      if (!res.ok) {
+        if (host) {
+          FREE.mountUpgrade(host, res, {
+            onConnectKey: function () {
+              if (P && typeof P.mountModal === 'function') P.mountModal($('#proConnect'));
+              PS.openConnect();
+            },
+            onBridge: function () { switchTab('bridge'); },
+          });
+        }
+        freeStateLine(res.message);
+        toast(res.message, 'warn');
+        return;
+      }
+      const data = parseFreeCards(res.text);
+      if (!data) {
+        freeStateLine('응답을 카드로 읽지 못했습니다. 다시 시도해 주세요.');
+        toast('응답을 카드로 읽지 못했습니다.', 'warn');
+        return;
+      }
+      const slides = slidesFromPro(data);
+      if (!slides.length) {
+        freeStateLine('응답에 카드가 비어 있습니다. 다시 시도해 주세요.');
+        toast('응답에 카드가 비어 있습니다.', 'warn');
+        return;
+      }
+      state.project.slides = slides;
+      state.selected = 0;
+      touch(true);
+      renderAll(true);
+      autosave();
+      const left = (res.remaining === undefined || res.remaining === null) ? '' : ' · 남은 맛보기 ' + res.remaining + (res.limit ? '/' + res.limit : '') + '회';
+      freeStateLine('무료 체험 카드 ' + slides.length + '장을 채웠습니다.' + left);
+      toast('무료 체험 카드 ' + slides.length + '장을 만들었습니다.', 'ok');
+    });
   }
 
   function runPro() {
@@ -2168,6 +2424,14 @@
         switchTab('cards');
       } else if (action === 'download-current') {
         downloadCurrent();
+      } else if (action === 'export-hires') {
+        openHires();
+      } else if (action === 'close-hires') {
+        closeHires();
+      } else if (action === 'run-hires') {
+        runHires();
+      } else if (action === 'v2-kit-sheet') {
+        exportKitSheet();
       } else if (action === 'download-all') {
         downloadAllZip();
       } else if (action === 'download-each') {
@@ -2190,6 +2454,8 @@
         autoSplit();
       } else if (action === 'pro-generate') {
         runPro();
+      } else if (action === 'free-generate') {
+        runFreeCards();
       } else if (action === 'recommend-design') {
         const rec = recommendDesign();
         if (rec.ok) toast(`스타일 ${rec.refs.length}안을 골랐습니다. 마음에 드는 안을 누르세요.`, 'ok');
@@ -2635,11 +2901,27 @@
 
     buildControls();
     bind();
+    ['#hiresScale', '#hiresFormat'].forEach(sel => {
+      const el = $(sel);
+      if (el) el.addEventListener('change', hiresNote);
+    });
+    const hiresEl = $('#hiresModal');
+    if (hiresEl) {
+      hiresEl.addEventListener('click', ev => { if (ev.target === hiresEl) closeHires(); });
+      document.addEventListener('keydown', ev => {
+        if (ev.key === 'Escape' && !hiresEl.hidden) closeHires();
+      });
+    }
     renderProviders();
     renderBridge();
     loadGemini();
     applyScriptInputs();
     renderAll(true);
+    if (FREE) {
+      FREE.configure({ app: 'cardnews-script-studio' });
+      const fb = $('#freeBadge');
+      if (fb) FREE.mountBadge(fb);
+    }
     initPro();
     switchTab('cards');
 
@@ -2678,6 +2960,9 @@
       applyBridge,
       generateWithGemini,
       openCopyLab,
+      openHires,
+      runHires,
+      exportKitSheet,
     };
   }
 
