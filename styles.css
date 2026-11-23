@@ -588,12 +588,21 @@ input::placeholder, textarea::placeholder { color: var(--ink-3); opacity: 1; }
   padding: 10px 16px; border-radius: var(--r-pill); box-shadow: var(--shadow-pop);
   animation: toastIn .18s ease-out;
   max-width: min(90vw, 460px); text-align: center;
+  pointer-events: auto; cursor: pointer;
+  transition: opacity .22s ease, transform .22s ease;
 }
+.toast.is-out { opacity: 0; transform: translateY(6px); }
+.toast:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 [data-theme="dark"] .toast { background: var(--surface-3); color: var(--ink); border: 1px solid var(--line-strong); }
 .toast.ok::before { content: '✓ '; color: #6EE7A8; }
 [data-theme="dark"] .toast.ok::before { color: var(--ok); }
 .toast.warn::before { content: '! '; color: #FFD166; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* 모바일: 하단 액션 버튼과 겹치지 않게 조금 띄운다 */
+@media (max-width: 900px) {
+  .toast-root { bottom: 76px; }
+}
 
 /* ── AI 추천 레이아웃 ───────────────────────────────────── */
 .ref-block { margin: 0; }

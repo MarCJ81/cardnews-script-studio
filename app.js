@@ -37,7 +37,7 @@
   const els = {};
   let saveTimer = null;
   let renderTimer = null;
-  let toastTimer = null;
+  let toaster = null;
 
   /* ── storage ────────────────────────────────────────────── */
   function readJSON(key, fallback) {
@@ -61,17 +61,25 @@
   function toast(message, kind) {
     const root = els.toastRoot;
     if (!root) return;
+    if (!toaster) {
+      if (window.StudioToast) {
+        toaster = window.StudioToast.create(root, { avoid: ['.stage-actions', '.script-actions'] });
+      } else return fallbackToast(root, message, kind);
+    }
+    toaster.show(message, kind);
+  }
+
+  // toast.js를 못 읽은 경우(아주 오래된 캐시)에도 알림은 1개만 남긴다.
+  let fallbackTimer = null;
+  function fallbackToast(root, message, kind) {
+    while (root.firstChild) root.removeChild(root.firstChild);
     const el = document.createElement('div');
     el.className = 'toast' + (kind ? ' ' + kind : '');
     el.textContent = message;
     root.appendChild(el);
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      el.style.transition = 'opacity .2s, transform .2s';
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(6px)';
-      setTimeout(() => el.remove(), 220);
-    }, 2600);
+    el.addEventListener('click', () => el.remove());
+    clearTimeout(fallbackTimer);
+    fallbackTimer = setTimeout(() => el.remove(), 2400);
   }
 
   function roundRect(ctx, x, y, w, h, r) {
